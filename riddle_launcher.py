@@ -14,7 +14,7 @@ col1, col2 = st.columns(2)
 col1.metric("Difficulty", st.session_state.game.riddle.difficulty.value.capitalize())
 col2.metric("Turn", f"{st.session_state.game.turns} / {st.session_state.game.MAX_TURNS}")
 
-with st.chat_message('system'):
+with st.chat_message('assistant'):
     st.markdown(f"Riddle Query: {st.session_state.game.riddle.query}")
 
 for i in range(st.session_state.game.get_game_turns()):
