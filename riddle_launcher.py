@@ -1,47 +1,87 @@
 import streamlit as st
 from dotenv import load_dotenv
+
 load_dotenv()
+
 from riddle.game import RiddleGame
+from utils import (
+    inject_css,
+    pick_npc_avatar,
+    render_title,
+    render_stats,
+    render_riddle,
+    render_victory_banner,
+    render_defeat_banner,
+    PLAYER_AVATAR,
+    DEFAULT_NPC_AVATAR,
+)
 
+# --- Page Config ---
+st.set_page_config(
+    page_title="The Riddle Chamber",
+    page_icon="./imgs/crossed_swords.png",
+    layout="centered",
+)
 
+inject_css()
 
-st.title("Riddle Game")
+# --- Session State ---
+def init_game():
+    st.session_state.game = RiddleGame()
+    st.session_state.npc_avatar = pick_npc_avatar()
 
 if "game" not in st.session_state:
-    st.session_state.game = RiddleGame()
+    init_game()
 
-col1, col2 = st.columns(2)
-col1.metric("Difficulty", st.session_state.game.riddle.difficulty.value.capitalize())
-col2.metric("Turn", f"{st.session_state.game.turns} / {st.session_state.game.MAX_TURNS}")
+game: RiddleGame = st.session_state.game
+npc_avatar = st.session_state.get("npc_avatar") or DEFAULT_NPC_AVATAR
 
-with st.chat_message('assistant'):
-    st.markdown(f"Riddle Query: {st.session_state.game.riddle.query}")
+# --- Top Controls ---
+btn_cols = st.columns([5, 1.2, 1.2])
+with btn_cols[1]:
+    if game.is_game_running() and st.button("Give Up"):
+        game.give_up()
+        st.rerun()
+with btn_cols[2]:
+    if st.button("New Game"):
+        init_game()
+        st.rerun()
 
-for i in range(st.session_state.game.get_game_turns()):
-    if i < len(st.session_state.game.guesses):
-        with st.chat_message('user'):
-            st.markdown(f"{st.session_state.game.guesses[i]}")
-    if i < len(st.session_state.game.hints):
-        with st.chat_message('assistant'):
-            st.markdown(f"{st.session_state.game.hints[i]}")
+# --- Layout ---
+render_title()
+render_stats(game.riddle.difficulty.value.capitalize(), game.turns, game.MAX_TURNS)
+render_riddle(game.riddle.query)
 
-if not st.session_state.game.is_game_running():
-    if st.session_state.game.get_game_state() == 'ended_won':
-        st.markdown("Congratulations! You guessed it right!")
+# --- Chat History ---
+for i in range(game.get_game_turns()):
+    if i < len(game.guesses):
+        with st.chat_message("user", avatar=PLAYER_AVATAR):
+            st.markdown(game.guesses[i])
+    if i < len(game.hints):
+        with st.chat_message("assistant", avatar=npc_avatar):
+            st.markdown(game.hints[i])
+
+# --- Game End States ---
+if not game.is_game_running():
+    if game.get_game_state() == "ended_won":
+        render_victory_banner()
     else:
-        st.markdown(f"Game Over! The answer was {st.session_state.game.riddle.answer}")
+        render_defeat_banner(game.riddle.answer)
 
-if prompt := st.chat_input('Guess what?'):
-    with st.chat_message('user'):
-        st.markdown(prompt)
-    hint = st.session_state.game.add_user_guess(prompt)
+# --- Chat Input ---
+if game.is_game_running():
+    if prompt := st.chat_input("Speak thy guess, adventurer..."):
+        with st.chat_message("user", avatar=PLAYER_AVATAR):
+            st.markdown(prompt)
 
-    if hint is not None:
-        with st.chat_message('assistant'):
-            st.markdown(hint)
-    else:
-        if st.session_state.game.get_game_state() == 'ended_won':
-            st.markdown("Congratulations! You guessed it right!")
+        hint = game.add_user_guess(prompt)
+
+        if hint is not None:
+            with st.chat_message("assistant", avatar=npc_avatar):
+                st.markdown(hint)
+        elif game.get_game_state() == "ended_won":
+            render_victory_banner()
         else:
-            st.markdown(f"Game Over! The answer was {st.session_state.game.riddle.answer}")
-    st.rerun()
+            render_defeat_banner(game.riddle.answer)
+
+        st.rerun()

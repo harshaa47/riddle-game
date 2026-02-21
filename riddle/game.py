@@ -70,6 +70,9 @@ class RiddleGame:
     def get_game_state(self) -> str:
         return self.game_state
 
+    def give_up(self):
+        self.game_state = 'ended_lost'
+
     def get_game_result(self) -> int:
         if self.game_state == 'ended_won':
             return 1
