@@ -34,7 +34,7 @@ You will be provided game info details which contains,
 
 You MUST respond in valid JSON with exactly these keys:
 - "result": either "correct" or "incorrect"
-- "hint": a string with a vague hint (empty string if the guess is correct)
+- "hint": a string with a vague hint (empty string if the guess is correct). keep it concise.
 
 <game info>
 Query : {query}

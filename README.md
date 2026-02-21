@@ -47,3 +47,7 @@ streamlit run riddle_launcher.py
 
 - **Frontend**: Streamlit
 - **LLM**: Claude (via LangChain)
+
+## Credits
+
+- [Craftpix.net](https://craftpix.net) for providing beautiful NPC avatars

@@ -71,6 +71,10 @@ if not game.is_game_running():
 # --- Chat Input ---
 if game.is_game_running():
     if prompt := st.chat_input("Speak thy guess, adventurer..."):
+        if len(prompt) > 100:
+            st.warning("Thy message is too long! Keep it under 100 characters.")
+            st.stop()
+
         with st.chat_message("user", avatar=PLAYER_AVATAR):
             st.markdown(prompt)
 
